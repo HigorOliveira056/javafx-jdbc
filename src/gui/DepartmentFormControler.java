@@ -1,9 +1,12 @@
 package gui;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import db.DbException;
+import gui.listeners.DataChangeListener;
 import gui.util.Alerts;
 import gui.util.Constraints;
 import gui.util.Utils;
@@ -22,6 +25,8 @@ public class DepartmentFormControler implements Initializable{
 	
 	private DepartmentService service;
 	
+	private List<DataChangeListener> dataChangeList = new ArrayList<>();
+	
 	@FXML
 	private TextField txtId;
 	@FXML
@@ -32,6 +37,18 @@ public class DepartmentFormControler implements Initializable{
 	private Button btSave;
 	@FXML
 	private Button btCancel;
+	
+	public void setDepartment(Department entity) {
+		this.entity = entity;
+	}
+	
+	public void setDepartmentService(DepartmentService service) {
+		this.service = service;
+	}
+	
+	public void subscribeDataChangeListener(DataChangeListener listener) {
+		dataChangeList.add(listener);
+	}
 	
 	@FXML
 	public void onBtSaveAction(ActionEvent event) {
@@ -44,6 +61,7 @@ public class DepartmentFormControler implements Initializable{
 		try {
 			entity = getFormData();
 			service.saveOurUpdate(entity);
+			notifyDataChangeListeners();
 			Utils.currentStage(event).close();
 			
 		}
@@ -54,6 +72,13 @@ public class DepartmentFormControler implements Initializable{
 		
 	}
 	
+	private void notifyDataChangeListeners() {
+		for (DataChangeListener listener: dataChangeList) {
+			listener.onDataChanged();
+		}
+		
+	}
+
 	private Department getFormData() {
 		Department obj = new Department();
 		obj.setId(Utils.tryParseToInt(txtId.getText()));
@@ -77,13 +102,6 @@ public class DepartmentFormControler implements Initializable{
 		Constraints.setTextFieldMaxLength(txtName, 30);
 	}
 	
-	public void setDepartment(Department entity) {
-		this.entity = entity;
-	}
-	
-	public void setDepartmentService(DepartmentService service) {
-		this.service = service;
-	}
 	
 	public void updateFormData () {
 		if(entity == null) {
